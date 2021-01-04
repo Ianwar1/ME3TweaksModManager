@@ -18,7 +18,27 @@ namespace MassEffectModManagerCore.modmanager.converters
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             init();
-            var game = (MEGame)value;
+            MEGame game = MEGame.Unknown;
+            if (value is MEGame mgame)
+            {
+                game = mgame;
+            }
+            else if (value is string domain)
+            {
+                switch (domain)
+                {
+                    case @"masseffect":
+                        game = MEGame.ME1;
+                        break;
+                    case @"masseffect2":
+                        game = MEGame.ME3;
+                        break;
+                    case @"masseffect3":
+                        game = MEGame.ME2;
+                        break;
+                }
+            }
+
             switch (game)
             {
                 case MEGame.ME1:
