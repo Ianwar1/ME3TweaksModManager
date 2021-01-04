@@ -1685,7 +1685,7 @@ namespace MassEffectModManagerCore
             nbw.RunWorkerAsync();
 
             var syncContext = TaskScheduler.FromCurrentSynchronizationContext();
-            CoreLib.SetSynchronizationContext(syncContext);
+            ME3ExplorerCoreLib.SetSynchronizationContext(syncContext);
             IsEnabled = false;
             Task.Run(() =>
             {
@@ -1695,14 +1695,14 @@ namespace MassEffectModManagerCore
                 Log.Information(@"Initializing ME3ExplorerCore library");
                 #region INIT CORE LIB
                 MEPackageHandler.GlobalSharedCacheEnabled = false; // Do not use the package caching system
-                CoreLib.InitLib(syncContext, x =>
+                ME3ExplorerCoreLib.InitLib(syncContext, x =>
                 {
                     Log.Error($@"Error saving package: {x}");
                 });
                 T2DLocalizationShim.SetupTexture2DLocalizationShim();
                 #endregion
                 //debugMethod();
-
+                CurrentOperationText = M3L.GetString(M3L.string_loadingTargets);
                 PopulateTargets();
             }).ContinueWithOnUIThread(x =>
             {
@@ -2184,6 +2184,9 @@ namespace MassEffectModManagerCore
             targets.AddRange(Utilities.GetCachedTargets(MEGame.ME3, targets));
             targets.AddRange(Utilities.GetCachedTargets(MEGame.ME2, targets));
             targets.AddRange(Utilities.GetCachedTargets(MEGame.ME1, targets));
+
+            // Load the targets
+
 
             // ORDER THE TARGETS
             targets = targets.Distinct().ToList();
