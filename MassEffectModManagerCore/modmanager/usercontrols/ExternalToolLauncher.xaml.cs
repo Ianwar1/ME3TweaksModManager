@@ -526,6 +526,17 @@ namespace MassEffectModManagerCore.modmanager.usercontrols
                         );
                     }
                 }
+                else if (!needsDownloading)
+                {
+                    Log.Information($@"Could not fetch latest version information for {toolName}. We will just use the local version.");
+                    resultingExecutableStringCallback?.Invoke(localExecutable);
+                }
+                else
+                {
+                    // It needs downloaded, but we don't have any way to download it!
+                    Log.Error($@"We do not have a local version of {toolName} and Mod Manager could not remotely fetch it. This tool cannot be used.");
+                    failedToDownloadCallback?.Invoke();
+                }
             }
 
             ToolsCheckedForUpdatesInThisSession.Add(tool);
@@ -563,7 +574,7 @@ namespace MassEffectModManagerCore.modmanager.usercontrols
             switch (tool)
             {
                 case ME3Explorer_Beta:
-                    if (App.ServerManifest.TryGetValue(@"me3explorerbeta_latestversion", out var me3expbLatestversion))
+                    if (App.ServerManifest != null && App.ServerManifest.TryGetValue(@"me3explorerbeta_latestversion", out var me3expbLatestversion))
                     {
                         return new Version(me3expbLatestversion);
                     }
@@ -578,7 +589,7 @@ namespace MassEffectModManagerCore.modmanager.usercontrols
             switch (tool)
             {
                 case ME3Explorer_Beta:
-                    if (App.ServerManifest.TryGetValue(@"me3explorerbeta_latestlink", out var me3expbLatestlink))
+                    if (App.ServerManifest != null && App.ServerManifest.TryGetValue(@"me3explorerbeta_latestlink", out var me3expbLatestlink))
                     {
                         return me3expbLatestlink;
                     }
