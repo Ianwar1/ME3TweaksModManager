@@ -807,7 +807,6 @@
                                     Source="{StaticResource me2gameicon}"
                                     Width="16"
                                     Height="16"
-                                    HorizontalAlignment="Center"
                                     RenderOptions.BitmapScalingMode="HighQuality" />
                             </MenuItem.Icon>
                         </MenuItem>
@@ -819,7 +818,9 @@
                                 <Image
                                     Source="{StaticResource me3gameicon}"
                                     Width="16"
-                                    Height="16" />
+                                    Height="16" 
+                                    RenderOptions.BitmapScalingMode="HighQuality"
+                                />
                             </MenuItem.Icon>
                         </MenuItem>
                     </MenuItem>
