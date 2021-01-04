@@ -185,24 +185,6 @@ namespace MassEffectModManagerCore.modmanager.usercontrols
             public string Filename { get; internal set; }
             public GameDatabase AssociatedDB { get; internal set; }
 
-            public string GameIconSource
-            {
-                get
-                {
-                    switch (Domain)
-                    {
-                        case @"masseffect":
-                            return @"/images/gameicons/ME1_48.ico";
-                        case @"masseffect2":
-                            return @"/images/gameicons/ME2_48.ico";
-                        case @"masseffect3":
-                            return @"/images/gameicons/ME3_48.ico";
-                    }
-
-                    return null;
-                }
-            }
-
             /// <summary>
             /// The full file path in the archive
             /// </summary>

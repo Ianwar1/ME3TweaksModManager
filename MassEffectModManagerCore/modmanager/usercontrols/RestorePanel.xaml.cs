@@ -74,7 +74,7 @@ namespace MassEffectModManagerCore.modmanager.usercontrols
         {
             public bool RefreshTargets;
 
-            private MEGame Game;
+            public MEGame Game { get; private set; }
 
             public bool CanOpenDropdown => !RestoreInProgress && BackupLocation != null;
 
@@ -92,15 +92,12 @@ namespace MassEffectModManagerCore.modmanager.usercontrols
                 {
                     case MEGame.ME1:
                         GameTitle = @"Mass Effect";
-                        GameIconSource = @"/images/gameicons/ME1_48.ico";
                         break;
                     case MEGame.ME2:
                         GameTitle = @"Mass Effect 2";
-                        GameIconSource = @"/images/gameicons/ME2_48.ico";
                         break;
                     case MEGame.ME3:
                         GameTitle = @"Mass Effect 3";
-                        GameIconSource = @"/images/gameicons/ME3_48.ico";
                         break;
                 }
 
@@ -221,7 +218,7 @@ namespace MassEffectModManagerCore.modmanager.usercontrols
                             bool aboutToCopyCallback(string fileBeingCopied)
                             {
                                 if (fileBeingCopied.Contains(@"\cmmbackup\")) return false; //do not copy cmmbackup files
-                                Debug.WriteLine(fileBeingCopied);
+                                //Debug.WriteLine(fileBeingCopied);
                                 if (fileBeingCopied.StartsWith(dlcFolderpath, StringComparison.InvariantCultureIgnoreCase))
                                 {
                                     //It's a DLC!
@@ -297,7 +294,9 @@ namespace MassEffectModManagerCore.modmanager.usercontrols
                                 Log.Error($@"An exception occurred while copying files to the backup:");
                                 Log.Error(App.FlattenException(e));
                                 // There was an error restoring the backup!
-                                Application.Current.Dispatcher.Invoke(() =>
+                                b.Result = RestoreResult.ERROR_COPYING_DATA;
+
+                                Application.Current.Dispatcher.InvokeAsync(() =>
                                 {
                                     M3L.ShowDialog(window, $"Copying the backup to the target failed:\n{e.Message}", "Restore failed", MessageBoxButton.OK, MessageBoxImage.Error);
                                 });
@@ -361,6 +360,7 @@ namespace MassEffectModManagerCore.modmanager.usercontrols
                                         {@"Game", Game.ToString()},
                                         {@"Result", @"Failure, Exception copying data"}
                                     });
+                                    // Message shown in BG thread because it has the error data
                                     break;
                                 case RestoreResult.RESTORE_OK:
                                     Analytics.TrackEvent(@"Restored game", new Dictionary<string, string>()
@@ -434,7 +434,6 @@ namespace MassEffectModManagerCore.modmanager.usercontrols
                 BackupStatusLine2 = BackupLocation ?? BackupService.GetBackupStatusTooltip(Game);
             }
 
-            public string GameIconSource { get; }
             public string GameTitle { get; }
             //Fody uses this property on weaving
 #pragma warning disable

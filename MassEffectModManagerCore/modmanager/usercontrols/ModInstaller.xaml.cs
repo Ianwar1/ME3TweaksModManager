@@ -458,6 +458,7 @@ namespace MassEffectModManagerCore.modmanager.usercontrols
             {
                 foreach (var file in fullPathMappingDisk)
                 {
+                    // telemetry shows this is throwing FileNotFound? But how?
                     requiredSpaceToInstall += new FileInfo(file.Key).Length;
                 }
             }

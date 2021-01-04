@@ -68,7 +68,7 @@ namespace MassEffectModManagerCore.modmanager.usercontrols
 
         public class GameBackup : INotifyPropertyChanged
         {
-            private MEGame Game;
+            public MEGame Game { get; }
             public ObservableCollectionExtended<GameTarget> AvailableBackupSources { get; } = new ObservableCollectionExtended<GameTarget>();
             private MainWindow window;
 
@@ -83,15 +83,12 @@ namespace MassEffectModManagerCore.modmanager.usercontrols
                 {
                     case MEGame.ME1:
                         GameTitle = @"Mass Effect";
-                        GameIconSource = @"/images/gameicons/ME1_48.ico";
                         break;
                     case MEGame.ME2:
                         GameTitle = @"Mass Effect 2";
-                        GameIconSource = @"/images/gameicons/ME2_48.ico";
                         break;
                     case MEGame.ME3:
                         GameTitle = @"Mass Effect 3";
-                        GameIconSource = @"/images/gameicons/ME3_48.ico";
                         break;
                 }
 
@@ -151,11 +148,13 @@ namespace MassEffectModManagerCore.modmanager.usercontrols
 
             private void BeginBackup()
             {
+                Log.Information(@"BackupCreator: BeginBackup()");
                 var targetToBackup = BackupSourceTarget;
                 if (!targetToBackup.IsCustomOption)
                 {
                     if (Utilities.IsGameRunning(targetToBackup.Game))
                     {
+                        Log.Error($@"BackupCreator: Cannot backup as {Utilities.GetGameName(BackupSourceTarget.Game)} is running");
                         M3L.ShowDialog(window, M3L.GetString(M3L.string_interp_cannotBackupGameWhileRunning, Utilities.GetGameName(BackupSourceTarget.Game)), M3L.GetString(M3L.string_gameRunning), MessageBoxButton.OK, MessageBoxImage.Error);
                         return;
                     }
@@ -680,7 +679,6 @@ namespace MassEffectModManagerCore.modmanager.usercontrols
                 BackupStatusLine2 = BackupLocation ?? BackupService.GetBackupStatusTooltip(Game);
             }
 
-            public string GameIconSource { get; }
             public string GameTitle { get; }
             //Fody uses this property on weaving
 #pragma warning disable

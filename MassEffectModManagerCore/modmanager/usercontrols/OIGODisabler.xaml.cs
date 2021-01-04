@@ -38,7 +38,6 @@ namespace MassEffectModManagerCore.modmanager.usercontrols
         public class OIGGame : INotifyPropertyChanged
         {
             public MEGame Game { get; private set; }
-            public string GameIconSource { get; private set; }
             public string GameTitle { get; private set; }
             public string D3D9Status { get; private set; }
             public string DisablerButtonText { get; private set; }
@@ -54,15 +53,12 @@ namespace MassEffectModManagerCore.modmanager.usercontrols
                 {
                     case MEGame.ME1:
                         GameTitle = @"Mass Effect";
-                        GameIconSource = @"/images/gameicons/ME1_48.ico";
                         break;
                     case MEGame.ME2:
                         GameTitle = @"Mass Effect 2";
-                        GameIconSource = @"/images/gameicons/ME2_48.ico";
                         break;
                     case MEGame.ME3:
                         GameTitle = @"Mass Effect 3";
-                        GameIconSource = @"/images/gameicons/ME3_48.ico";
                         break;
                 }
                 SelectedTarget = Targets.FirstOrDefault();
