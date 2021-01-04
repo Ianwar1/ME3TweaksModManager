@@ -123,7 +123,8 @@ namespace MassEffectModManagerCore.modmanager.usercontrols
                 ERROR_COULD_NOT_DELETE_GAME_DIRECTORY,
                 EXCEPTION_DELETING_GAME_DIRECTORY,
                 RESTORE_OK,
-                ERROR_COULD_NOT_CREATE_DIRECTORY
+                ERROR_COULD_NOT_CREATE_DIRECTORY,
+                ERROR_COPYING_DATA
             }
 
             private void BeginRestore()
@@ -283,11 +284,27 @@ namespace MassEffectModManagerCore.modmanager.usercontrols
 
                             BackupStatus = M3L.GetString(M3L.string_restoringGame);
                             Log.Information($@"Copying backup to game directory: {backupPath} -> {restoreTargetPath}");
-                            CopyDir.CopyAll_ProgressBar(new DirectoryInfo(backupPath), new DirectoryInfo(restoreTargetPath),
-                                totalItemsToCopyCallback: totalFilesToCopyCallback,
-                                aboutToCopyCallback: aboutToCopyCallback,
-                                fileCopiedCallback: fileCopiedCallback,
-                                ignoredExtensions: new[] { @"*.pdf", @"*.mp3" });
+
+                            try
+                            {
+                                CopyDir.CopyAll_ProgressBar(new DirectoryInfo(backupPath), new DirectoryInfo(restoreTargetPath),
+                                    totalItemsToCopyCallback: totalFilesToCopyCallback,
+                                    aboutToCopyCallback: aboutToCopyCallback,
+                                    fileCopiedCallback: fileCopiedCallback,
+                                    ignoredExtensions: new[] { @"*.pdf", @"*.mp3" });
+                            }
+                            catch (Exception e)
+                            {
+                                Log.Error($@"An exception occurred while copying files to the backup:");
+                                Log.Error(App.FlattenException(e));
+                                // There was an error restoring the backup!
+                                Application.Current.Dispatcher.Invoke(() =>
+                                {
+                                    M3L.ShowDialog(window, $"Copying the backup to the target failed:\n{e.Message}", "Restore failed", MessageBoxButton.OK, MessageBoxImage.Error);
+                                });
+                                return;
+                            }
+
                             Log.Information(@"Restore of game data has completed");
                         }
 
@@ -311,7 +328,7 @@ namespace MassEffectModManagerCore.modmanager.usercontrols
                             Log.Error($@"Exception occurred in {nbw.Name} thread: {b.Error.Message}");
                         }
                         TaskbarHelper.SetProgressState(TaskbarProgressBarState.NoProgress);
-                        if (b.Result is RestoreResult result)
+                        if (b.Error == null && b.Result is RestoreResult result)
                         {
                             switch (result)
                             {
@@ -338,6 +355,13 @@ namespace MassEffectModManagerCore.modmanager.usercontrols
                                         {@"Result", @"Failure, Exception deleting existing game directory"}
                                     });
                                     M3L.ShowDialog(window, M3L.GetString(M3L.string_dialogErrorOccuredDeletingGameDirectory), M3L.GetString(M3L.string_errorRestoringGame), MessageBoxButton.OK, MessageBoxImage.Error);
+                                    break;
+                                case RestoreResult.ERROR_COPYING_DATA:
+                                    Analytics.TrackEvent(@"Restored game", new Dictionary<string, string>()
+                                    {
+                                        {@"Game", Game.ToString()},
+                                        {@"Result", @"Failure, Exception copying data"}
+                                    });
                                     break;
                                 case RestoreResult.RESTORE_OK:
                                     Analytics.TrackEvent(@"Restored game", new Dictionary<string, string>()

@@ -438,12 +438,34 @@ namespace MassEffectModManagerCore.modmanager.usercontrols
                             BackupStatus = M3L.GetString(M3L.string_creatingBackup);
                             Log.Information($@"Backing up {targetToBackup.TargetPath} to {backupPath}");
                             nbw.ReportProgress(0, TaskbarProgressBarState.Normal);
-                            CopyDir.CopyAll_ProgressBar(new DirectoryInfo(targetToBackup.TargetPath),
-                                new DirectoryInfo(backupPath),
-                                totalItemsToCopyCallback: totalFilesToCopyCallback,
-                                aboutToCopyCallback: aboutToCopyCallback,
-                                fileCopiedCallback: fileCopiedCallback,
-                                ignoredExtensions: new[] { @"*.pdf", @"*.mp3" });
+                            try
+                            {
+                                CopyDir.CopyAll_ProgressBar(new DirectoryInfo(targetToBackup.TargetPath),
+                                    new DirectoryInfo(backupPath),
+                                    totalItemsToCopyCallback: totalFilesToCopyCallback,
+                                    aboutToCopyCallback: aboutToCopyCallback,
+                                    fileCopiedCallback: fileCopiedCallback,
+                                    ignoredExtensions: new[] { @"*.pdf", @"*.mp3" });
+                            }
+                            catch (Exception e)
+                            {
+                                Log.Error($@"An exception occurred while copying files to the backup:");
+                                Log.Error(App.FlattenException(e));
+                                // There was an error creating the backup!
+                                EndBackup();
+                                Analytics.TrackEvent(@"Created a backup", new Dictionary<string, string>()
+                                {
+                                    {@"Game", Game.ToString()},
+                                    {@"Result", $@"Failed, {e.Message}"},
+                                    {@"Type", targetToBackup.IsCustomOption ? @"Linked" : @"Copy"}
+                                });
+                                Application.Current.Dispatcher.Invoke(() =>
+                                {
+                                    M3L.ShowDialog(window, $"Creating a backup failed:\n{e.Message}", "Backup failed", MessageBoxButton.OK, MessageBoxImage.Error);
+                                });
+                                return;
+                            }
+
                             #endregion
                         }
 
@@ -588,7 +610,7 @@ namespace MassEffectModManagerCore.modmanager.usercontrols
                 {
                     Utilities.GetDiskFreeSpaceEx(backupPath, out var freeBytes, out var totalBytes,
                         out var totalFreeBytes);
-                    var requiredSpace = (ulong) (Utilities.GetSizeOfDirectory(targetToBackup.TargetPath) * 1.1); //10% buffer
+                    var requiredSpace = (ulong)(Utilities.GetSizeOfDirectory(targetToBackup.TargetPath) * 1.1); //10% buffer
                     Log.Information(
                         $@"Backup space check. Backup size: {FileSize.FormatSize(requiredSpace)}, free space: {FileSize.FormatSize(freeBytes)}");
                     if (freeBytes < requiredSpace)
@@ -663,7 +685,7 @@ namespace MassEffectModManagerCore.modmanager.usercontrols
             public string GameTitle { get; }
             //Fody uses this property on weaving
 #pragma warning disable
-public event PropertyChangedEventHandler PropertyChanged;
+            public event PropertyChangedEventHandler PropertyChanged;
 #pragma warning restore
             public GameTarget BackupSourceTarget { get; set; }
             public string BackupLocation { get; set; }
