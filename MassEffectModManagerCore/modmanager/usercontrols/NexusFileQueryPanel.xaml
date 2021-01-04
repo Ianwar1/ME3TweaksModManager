@@ -74,6 +74,7 @@
                 HorizontalAlignment="Stretch"
                 Visibility="{Binding QueryInProgress, Converter={StaticResource BoolToVisibilityConverter}}">
                 <fa:ImageAwesome
+                    Foreground="{DynamicResource {x:Static adonisUi:Brushes.AccentForegroundBrush}}"
                     Icon="Spinner"
                     Spin="True"
                     SpinDuration="1.5"
@@ -101,7 +102,7 @@
                             <DockPanel
                                 Margin="0,2">
                                 <Image
-                                    Source="{Binding GameIconSource}"
+                                    Source="{Binding Domain, Converter={StaticResource GameToImageIconConverter}}"
                                     Width="48"
                                     Margin="0,0,4,0"
                                     VerticalAlignment="Top"
