@@ -383,6 +383,7 @@
                     </ItemsControl>
                 </DockPanel>
             </TabItem>
+
             <TabItem
                 Header="{DynamicResource string_textures}"
                 Margin="0"
@@ -475,6 +476,16 @@
                             </ItemsControl>
                         </DockPanel>
                     </ScrollViewer>
+                </DockPanel>
+            </TabItem>
+            <TabItem
+                Header="DLC"
+                Margin="0"
+                Padding="0">
+                <DockPanel
+                    Height="300"
+                    Margin="-8">
+                    <ListBox ItemsSource="{Binding UIInstalledOfficialDLC}"/>
                 </DockPanel>
             </TabItem>
             <TabItem

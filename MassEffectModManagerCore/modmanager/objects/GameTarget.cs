@@ -351,10 +351,12 @@ namespace MassEffectModManagerCore.modmanager.objects
                     return;
                 }
 
+                if (TextureModded) return; // Do not populate the list of modified files because they're texture modded. No point in doing this.
                 if (file == getALOTMarkerFilePath())
                 {
                     return; //Do not report this file as modified or user will desync game state with texture state
                 }
+
                 modifiedFiles.Add(file);
             }
             VanillaDatabaseService.ValidateTargetAgainstVanilla(this, failedCallback);
@@ -388,20 +390,29 @@ namespace MassEffectModManagerCore.modmanager.objects
                 }
 
                 UIInstalledDLCMods.ClearEx();
+                UIInstalledOfficialDLC.ClearEx();
             });
         }
 
         public ObservableCollectionExtended<InstallationInformation.InstalledDLCMod> UIInstalledDLCMods { get; } = new ObservableCollectionExtended<InstallationInformation.InstalledDLCMod>();
-
+        public ObservableCollectionExtended<string> UIInstalledOfficialDLC { get; } = new ObservableCollectionExtended<string>();
+        /// <summary>
+        /// Populates the list of DLC mods. Also populates the list of installed official DLC
+        /// </summary>
+        /// <param name="includeDisabled"></param>
+        /// <param name="deleteConfirmationCallback"></param>
+        /// <param name="notifyDeleted"></param>
+        /// <param name="modNamePrefersTPMI"></param>
         public void PopulateDLCMods(bool includeDisabled, Func<InstallationInformation.InstalledDLCMod, bool> deleteConfirmationCallback = null, Action notifyDeleted = null, bool modNamePrefersTPMI = false)
         {
             var dlcDir = M3Directories.GetDLCPath(this);
             var installedMods = M3Directories.GetInstalledDLC(this, includeDisabled).Where(x => !MEDirectories.OfficialDLC(Game).Contains(x.TrimStart('x'), StringComparer.InvariantCultureIgnoreCase));
+            var officialDLC = VanillaDatabaseService.GetInstalledOfficialDLC(this);
             //Must run on UI thread
             Application.Current.Dispatcher.Invoke(delegate
             {
-                UIInstalledDLCMods.ClearEx();
-                UIInstalledDLCMods.AddRange(installedMods.Select(x => new InstallationInformation.InstalledDLCMod(Path.Combine(dlcDir, x), Game, deleteConfirmationCallback, notifyDeleted, modNamePrefersTPMI)).ToList().OrderBy(x => x.ModName));
+                UIInstalledDLCMods.ReplaceAll(installedMods.Select(x => new InstallationInformation.InstalledDLCMod(Path.Combine(dlcDir, x), Game, deleteConfirmationCallback, notifyDeleted, modNamePrefersTPMI)).ToList().OrderBy(x => x.ModName));
+                UIInstalledOfficialDLC.ReplaceAll(officialDLC.Select(x => $"{x} ({MEDirectories.OfficialDLCNames(Game)[x]})"));
             });
         }
 
