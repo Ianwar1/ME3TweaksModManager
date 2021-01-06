@@ -145,7 +145,7 @@ namespace MassEffectModManagerCore.modmanager.windows
 
         //Fody uses this property on weaving
 #pragma warning disable
-public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler PropertyChanged;
 #pragma warning restore
 
         public string GetPropertyMap(string filename)
@@ -161,7 +161,7 @@ public event PropertyChangedEventHandler PropertyChanged;
 
         private void Reset_Click(object sender, RoutedEventArgs e)
         {
-            var items = new[] {BioEngineEntries.ToList(), BioGameEntries.ToList(), BioPartyEntries.ToList()};
+            var items = new[] { BioEngineEntries.ToList(), BioGameEntries.ToList(), BioPartyEntries.ToList() };
 
             foreach (var list in items)
             {
@@ -174,7 +174,7 @@ public event PropertyChangedEventHandler PropertyChanged;
                 }
             }
 
-            ShowMessage(M3L.GetString(M3L.string_resetIniItemsExceptBasic),7000);
+            ShowMessage(M3L.GetString(M3L.string_resetIniItemsExceptBasic), 7000);
         }
 
         /// <summary>
@@ -213,38 +213,47 @@ public event PropertyChangedEventHandler PropertyChanged;
             foreach (var kp in saveMap)
             {
                 string configFileBeingUpdated = Path.Combine(configFileFolder, kp.Key);
-                if (File.Exists(configFileBeingUpdated))
+                try
                 {
-                    Log.Information(@"MEIM: Saving ini file: " + configFileBeingUpdated);
-
-                    //unset readonly
-                    File.SetAttributes(configFileBeingUpdated, File.GetAttributes(configFileBeingUpdated) & ~FileAttributes.ReadOnly);
-
-                    DuplicatingIni ini = DuplicatingIni.LoadIni(configFileBeingUpdated);
-                    foreach (IniPropertyMaster prop in kp.Value)
+                    if (File.Exists(configFileBeingUpdated))
                     {
-                        string validation = prop.Validate(@"CurrentValue");
-                        if (validation == null)
+                        Log.Information(@"MEIM: Saving ini file: " + configFileBeingUpdated);
+
+                        //unset readonly
+                        File.SetAttributes(configFileBeingUpdated, File.GetAttributes(configFileBeingUpdated) & ~FileAttributes.ReadOnly);
+
+                        DuplicatingIni ini = DuplicatingIni.LoadIni(configFileBeingUpdated);
+                        foreach (IniPropertyMaster prop in kp.Value)
                         {
-                            var itemToUpdate = ini.GetValue(prop.SectionName, prop.PropertyName);
-                            if (itemToUpdate != null)
+                            string validation = prop.Validate(@"CurrentValue");
+                            if (validation == null)
                             {
-                                itemToUpdate.Value = prop.ValueToWrite;
+                                var itemToUpdate = ini.GetValue(prop.SectionName, prop.PropertyName);
+                                if (itemToUpdate != null)
+                                {
+                                    itemToUpdate.Value = prop.ValueToWrite;
+                                }
+                                else
+                                {
+                                    Log.Error($@"Could not find property to update in ini! [{prop.SectionName}] {prop.PropertyName}");
+                                }
                             }
                             else
                             {
-                                Log.Error($@"Could not find property to update in ini! [{prop.SectionName}] {prop.PropertyName}");
+                                Log.Error($@"Could not save property {prop.FriendlyPropertyName} because {validation}");
+                                M3L.ShowDialog(this, M3L.GetString(M3L.string_interp_propertyNotSaved, prop.FriendlyPropertyName, validation), M3L.GetString(M3L.string_errorSavingProperties), MessageBoxButton.OK, MessageBoxImage.Error);
                             }
                         }
-                        else
-                        {
-                            Log.Error($@"Could not save property {prop.FriendlyPropertyName} because {validation}");
-                            M3L.ShowDialog(this, M3L.GetString(M3L.string_interp_propertyNotSaved, prop.FriendlyPropertyName, validation), M3L.GetString(M3L.string_errorSavingProperties), MessageBoxButton.OK, MessageBoxImage.Error);
-                        }
+
+                        Analytics.TrackEvent(@"Saved game config in MEIM");
+                        File.WriteAllText(configFileBeingUpdated, ini.ToString());
+                        ShowMessage(M3L.GetString(M3L.string_saved));
                     }
-                    Analytics.TrackEvent(@"Saved game config in MEIM");
-                    File.WriteAllText(configFileBeingUpdated, ini.ToString());
-                    ShowMessage(M3L.GetString(M3L.string_saved));
+                }
+                catch (Exception e)
+                {
+                    Log.Error($@"Error saving {configFileBeingUpdated}: {e.Message}");
+                    M3L.ShowDialog(this, $"There was an error saving {configFileBeingUpdated}:\n\n{e.Message}", "Error saving file", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }
